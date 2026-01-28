@@ -3,8 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>你猜个Der～</title>
+    <meta name="theme-color" content="#1e1b4b" />
+    <style>
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+      body {
+        overscroll-behavior: none;
+        touch-action: pan-y;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>

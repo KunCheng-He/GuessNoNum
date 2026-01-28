@@ -40,34 +40,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="grid grid-cols-3 gap-2 p-4 bg-gray-100 rounded-t-xl pb-8">
+  <div class="grid grid-cols-3 gap-3 p-4 bg-transparent rounded-t-3xl pb-8">
     <button
       v-for="key in keys"
       :key="key"
       @click="() => { audioController.playClick(); emit('input', key) }"
       :disabled="disabled || maxLengthReached"
-      class="h-14 text-2xl font-bold bg-white rounded-lg shadow-sm active:bg-gray-50 disabled:opacity-50 touch-manipulation transition-colors hover:bg-gray-50"
+      class="h-16 text-2xl font-bold bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-md rounded-2xl shadow-lg border border-white/10 text-white active:scale-95 disabled:opacity-30 touch-manipulation transition-all duration-200 hover:bg-white/20 hover:border-white/30 hover:shadow-xl hover:shadow-white/5"
     >
       {{ key }}
     </button>
     <button
       @click="() => { audioController.playDelete(); emit('delete') }"
       :disabled="disabled"
-      class="h-14 flex items-center justify-center bg-gray-200 rounded-lg shadow-sm active:bg-gray-300 disabled:opacity-50 touch-manipulation transition-colors hover:bg-gray-300"
+      class="h-16 flex items-center justify-center bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-md rounded-2xl shadow-lg border border-white/10 text-white/60 active:scale-95 disabled:opacity-30 touch-manipulation transition-all duration-200 hover:bg-white/15 hover:text-white/90 hover:border-white/20"
     >
-      <Delete class="w-6 h-6 text-gray-700" />
+      <Delete class="w-6 h-6" />
     </button>
     <button
       @click="() => { audioController.playClick(); emit('input', '0') }"
       :disabled="disabled || maxLengthReached"
-      class="h-14 text-2xl font-bold bg-white rounded-lg shadow-sm active:bg-gray-50 disabled:opacity-50 touch-manipulation transition-colors hover:bg-gray-50"
+      class="h-16 text-2xl font-bold bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-md rounded-2xl shadow-lg border border-white/10 text-white active:scale-95 disabled:opacity-30 touch-manipulation transition-all duration-200 hover:bg-white/20 hover:border-white/30 hover:shadow-xl hover:shadow-white/5"
     >
       0
     </button>
     <button
       @click="() => { audioController.playClick(); emit('confirm') }"
       :disabled="disabled"
-      class="h-14 flex items-center justify-center bg-blue-600 text-white rounded-lg shadow-sm active:bg-blue-700 disabled:bg-gray-400 touch-manipulation transition-colors hover:bg-blue-700"
+      class="h-16 flex items-center justify-center bg-gradient-to-r from-violet-600 to-pink-600 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 text-white active:scale-95 disabled:opacity-30 disabled:grayscale touch-manipulation transition-all duration-200 hover:from-violet-500 hover:to-pink-500 hover:shadow-xl hover:shadow-pink-500/20"
     >
       <Check class="w-6 h-6" />
     </button>

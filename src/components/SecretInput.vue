@@ -56,24 +56,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex flex-col h-full bg-white overflow-y-auto">
+  <div class="flex flex flex-col h-full bg-transparent overflow-y-auto">
     
     <!-- Profile Setup -->
     <div v-if="step === 'profile'" class="flex-1 flex flex-col items-center justify-center p-4">
       <div class="text-6xl mb-4">👋</div>
-      <h2 class="text-2xl font-bold mb-2">你好，玩家 {{ player }}!</h2>
-      <p class="text-gray-500 mb-8">请设置你的昵称和头像</p>
+      <h2 class="text-2xl font-bold mb-2 text-white">你好，玩家 {{ player }}!</h2>
+      <p class="text-white/70 mb-8">请设置你的昵称和头像</p>
       
       <!-- Avatar Selection -->
       <div class="mb-6">
-        <div class="text-sm font-medium text-gray-600 mb-3 text-center">选择头像</div>
+        <div class="text-sm font-medium text-white/60 mb-3 text-center">选择头像</div>
         <div class="grid grid-cols-5 gap-3 max-w-xs">
           <button
             v-for="emoji in emojis"
             :key="emoji"
             @click="avatar = emoji"
-            class="text-3xl p-2 rounded-lg transition-all hover:bg-gray-100"
-            :class="avatar === emoji ? 'bg-blue-100 ring-2 ring-blue-500 scale-110' : ''"
+            class="text-3xl p p-2 rounded-2xl transition-all duration-300 hover:bg-white/10"
+            :class="avatar === emoji ? 'bg-white/10 ring-2 ring-pink-400 scale-110 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : 'opacity-70 hover:opacity-100 hover:scale-105'"
           >
             {{ emoji }}
           </button>
@@ -82,20 +82,20 @@ onMounted(() => {
 
       <!-- Name Input -->
       <div class="w-full max-w-xs mb-8">
-        <div class="text-sm font-medium text-gray-600 mb-2">输入昵称</div>
+        <div class="text-sm font-medium text-white/60 mb-2">输入昵称</div>
         <input
           v-model="name"
           type="text"
           maxlength="10"
           placeholder="请输入昵称"
-          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-center text-lg focus:border-blue-500 focus:outline-none transition-colors"
+          class="w-full px-4 py-3 border-2 border-white/10 bg-black/20 backdrop-blur-md rounded-2xl text-center text-lg focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 text-white placeholder-white/20 focus:outline-none transition-all duration-300"
         />
       </div>
 
       <button
         @click="handleConfirmProfile"
         :disabled="!name.trim() || !avatar"
-        class="w-full max-w-xs py-3 bg-blue-600 text-white rounded-xl font-bold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-700 active:scale-95 transition-all"
+        class="w-full max-w-xs py-4 bg-gradient-to-r from-violet-600 to-pink-600 backdrop-blur-sm text-white rounded-2xl font-bold tracking-wider disabled:opacity-50 disabled:cursor-not-allowed hover:from-violet-500 hover:to-pink-500 active:scale-95 transition-all shadow-lg shadow-pink-900/20 hover:shadow-pink-600/30"
       >
         {{ isProfileSetup && player === 'A' ? '开始游戏' : '下一步' }}
       </button>
@@ -104,28 +104,28 @@ onMounted(() => {
     <!-- Secret Number Setup -->
     <div v-else class="flex-1 flex flex-col items-center justify-center p-4">
       <div class="text-6xl mb-4">{{ avatar }}</div>
-      <h2 class="text-2xl font-bold mb-2">{{ name }}</h2>
-      <p class="text-gray-500 mb-8">请设置你的 4 位秘密数字</p>
+      <h2 class="text-2xl font-bold mb-2 text-white">{{ name }}</h2>
+      <p class="text-white/70 mb-8">请设置你的 4 位秘密数字</p>
       
-      <div class="flex gap-4 mb-8">
+      <div class="flex gap-4 mb-8 justify-center">
         <div
           v-for="i in 4"
           :key="i"
-          class="w-14 h-20 border-b-2 flex items-center justify-center text-4xl font-bold transition-colors"
-          :class="digits[i-1] ? 'border-blue-600 text-blue-600' : 'border-gray-300 text-gray-400'"
+          class="w-14 h-20 border-b-2 flex items-center justify-center text-4xl font-bold transition-all duration-300"
+          :class="digits[i-1] ? 'border-pink-500 text-pink-400 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]' : 'border-white/20 text-white/20'"
         >
           {{ digits[i-1] || '•' }}
         </div>
       </div>
       
-      <p class="text-sm text-red-500 h-6 transition-opacity" :class="{ 'opacity-0': digits.length < 4 }">
+      <p class="text-sm text-pink-400 h-6 transition-opacity font-medium tracking-wide" :class="{ 'opacity-0': digits.length < 4 }">
         {{ digits.length === 4 ? '点击勾号确认提交' : '' }}
       </p>
 
       <div class="mt-4">
         <button
           @click="step = 'profile'"
-          class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          class="text-sm text-white/50 hover:text-white/70 transition-colors"
         >
           ← 返回修改资料
         </button>

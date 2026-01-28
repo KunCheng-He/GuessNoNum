@@ -78,8 +78,8 @@ const handleGuess = (guess: string) => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-gray-100 flex items-center justify-center p-0 sm:p-4 overflow-hidden">
-    <div class="w-full h-full sm:h-[85vh] sm:rounded-2xl sm:border sm:border-gray-200 bg-white shadow-xl flex flex-col overflow-hidden transition-all duration-300 max-w-md sm:max-w-4xl mx-auto">
+  <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-950 to-black flex items-center justify-center p-0 sm:p-4 overflow-hidden">
+    <div class="w-full h-full sm:h-[85vh] sm:rounded-3xl sm:border sm:border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 max-w-md sm:max-w-7xl mx-auto ring-1 ring-white/5">
       
       <!-- Privacy Curtain -->
       <PrivacyCurtain
@@ -110,6 +110,7 @@ const handleGuess = (guess: string) => {
         <!-- Battle Phase -->
         <GameBoard
           v-else
+          class="flex-1 min-h-0 w-full"
           :current-player="gameStore.currentPlayer"
           :history="history"
           @guess="handleGuess"
@@ -117,35 +118,35 @@ const handleGuess = (guess: string) => {
       </template>
 
       <!-- Winner Modal -->
-      <div v-if="gameState === GameState.FINISHED" class="absolute inset-0 z-40 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-        <div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-sm w-full transform transition-all scale-100">
-          <div class="text-6xl mb-4">🏆</div>
-          <h2 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
+      <div v-if="gameState === GameState.FINISHED" class="absolute inset-0 z-40 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-500">
+        <div class="bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-8 text-center shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-white/10 ring-1 ring-white/5">
+          <div class="text-7xl mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">🏆</div>
+          <h2 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2 text-white">
             <span>{{ useGameStore().winner === Player.A ? gameStore.playerA.avatar : gameStore.playerB.avatar }}</span>
-            <span>{{ useGameStore().winner === Player.A ? gameStore.playerA.name : gameStore.playerB.name }} 获胜!</span>
+            <span class="bg-gradient-to-r from-violet-200 to-pink-200 bg-clip-text text-transparent">{{ useGameStore().winner === Player.A ? gameStore.playerA.name : gameStore.playerB.name }} 获胜!</span>
           </h2>
-          <p class="text-gray-500 mb-8">恭喜!</p>
+          <p class="text-white/50 mb-8 font-medium tracking-wide">恭喜!</p>
           
-          <div class="grid grid-cols-2 gap-4 mb-8 text-left bg-gray-50 p-4 rounded-xl">
+          <div class="grid grid-cols-2 gap-4 mb-8 text-left bg-black/20 p-4 rounded-2xl border border-white/5">
             <div>
-              <div class="text-xs text-gray-400 uppercase flex items-center gap-1 mb-1">
+              <div class="text-xs text-white/40 uppercase flex items-center gap-1 mb-1 font-medium tracking-wider">
                 <span>{{ gameStore.playerA.avatar }}</span>
                 <span class="truncate">{{ gameStore.playerA.name }} 谜底</span>
               </div>
-              <div class="text-xl font-mono font-bold">{{ useGameStore().secretA }}</div>
+              <div class="text-xl font-mono font-bold text-white/90 tracking-widest">{{ useGameStore().secretA }}</div>
             </div>
             <div>
-              <div class="text-xs text-gray-400 uppercase flex items-center gap-1 mb-1">
+              <div class="text-xs text-white/40 uppercase flex items-center gap-1 mb-1 font-medium tracking-wider">
                 <span>{{ gameStore.playerB.avatar }}</span>
                 <span class="truncate">{{ gameStore.playerB.name }} 谜底</span>
               </div>
-              <div class="text-xl font-mono font-bold">{{ useGameStore().secretB }}</div>
+              <div class="text-xl font-mono font-bold text-white/90 tracking-widest">{{ useGameStore().secretB }}</div>
             </div>
           </div>
 
           <button
             @click="() => { audioController.playClick(); resetGame(); showPrivacyCurtain = true }"
-            class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-all"
+            class="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:from-violet-500 hover:to-pink-500 active:scale-95 transition-all shadow-lg shadow-pink-900/20 hover:shadow-pink-600/30 tracking-wider"
           >
             <span class="text-xl mr-2">🔄</span>
             再来一局
