@@ -22,8 +22,6 @@ const digits = ref<string[]>([])
 const historyA = computed(() => props.history.filter(r => r.player === PlayerEnum.A))
 const historyB = computed(() => props.history.filter(r => r.player === PlayerEnum.B))
 
-const historyContainerA = ref<HTMLElement | null>(null)
-const historyContainerB = ref<HTMLElement | null>(null)
 const bottomRefA = ref<HTMLElement | null>(null)
 const bottomRefB = ref<HTMLElement | null>(null)
 
@@ -234,7 +232,7 @@ const handleConfirm = () => {
           </div>
         </div>
 
-        <div ref="historyContainerA" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
           <div v-if="historyA.length === 0" class="flex flex-col items-center justify-center h-full text-white/30">
             <p class="text-sm font-medium tracking-widest">暂无记录</p>
           </div>
@@ -310,7 +308,7 @@ const handleConfirm = () => {
           </div>
         </div>
 
-        <div ref="historyContainerB" class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
           <div v-if="historyB.length === 0" class="flex flex-col items-center justify-center h-full text-white/30">
             <p class="text-sm font-medium tracking-widest">暂无记录</p>
           </div>
