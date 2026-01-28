@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build Output
+dist
+dist-ssr
+*.tsbuildinfo
+
+# Local Environment Files
+# .env.local, .env.development.local, etc. are covered by *.local
+*.local
+.env
+.env.*
+
+# Exceptions for environment files (uncomment if you want to commit these)
+# !.env
+# !.env.production
+# !.env.development
+
+# Editor directories and files
+.vscode
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS Generated Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Testing
+coverage
+
+.trae
+.opencode
