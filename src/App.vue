@@ -6,12 +6,12 @@ import GameBoard from './components/GameBoard.vue'
 import PrivacyCurtain from './components/PrivacyCurtain.vue'
 import { audioController } from './utils/audio'
 import confetti from 'canvas-confetti'
-import { X, RotateCcw, Eye, Volume2, VolumeX } from 'lucide-vue-next'
+import { X, RotateCcw, Volume2, VolumeX } from 'lucide-vue-next'
 
 const gameStore = useGameStore()
 const gameState = computed(() => gameStore.gameState)
 const history = computed(() => gameStore.history)
-const { setSecret, submitGuess, resetGame, enterReviewMode, hidePrivacyCurtain } = gameStore
+const { setSecret, submitGuess, resetGame, enterReviewMode, hidePrivacyCurtain, showPrivacyCurtain } = gameStore
 
 const soundEnabled = ref(true)
 
@@ -67,11 +67,6 @@ const toggleSound = () => {
 
 const handleDismissPrivacy = () => {
   audioController.playClick()
-  hidePrivacyCurtain()
-}
-
-const handleStartNewGame = () => {
-  resetGame()
   hidePrivacyCurtain()
 }
 
@@ -175,7 +170,7 @@ const handleGuess = (guess: string) => {
           </div>
 
           <button
-            @click="() => { audioController.playClick(); resetGame(); showPrivacyCurtain = true }"
+            @click="() => { audioController.playClick(); resetGame(); showPrivacyCurtain() }"
             class="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:from-violet-500 hover:to-pink-500 active:scale-95 transition-all shadow-lg shadow-pink-900/20 hover:shadow-pink-600/30 tracking-wider"
           >
             <RotateCcw class="w-5 h-5" />
