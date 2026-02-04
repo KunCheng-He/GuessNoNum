@@ -5,7 +5,8 @@ export enum GameState {
   SETUP_A = 'setup_a',
   SETUP_B = 'setup_b',
   PLAYING = 'playing',
-  FINISHED = 'finished'
+  FINISHED = 'finished',
+  REVIEW = 'review'
 }
 
 export enum Player {
@@ -42,20 +43,27 @@ export const useGameStore = defineStore('game', () => {
   const history = ref<GuessRecord[]>([])
   const currentPlayer = ref<Player>(Player.A)
   const winner = ref<Player | null>(null)
+  const isPrivacyCurtainVisible = ref(true)
 
   const resetGame = () => {
-    // If restarting, we might want to keep profiles or go back to setup.
-    // Let's go back to setup for now so they can change if they want, 
-    // or maybe just restart the round. 
-    // Given the request "User submitted...", usually "Restart" means "Play again".
-    // I'll reset to SETUP_A (skip profile) but keep profiles.
-    // Unless we want to allow changing profiles. Let's stick to SETUP_A to be faster.
     gameState.value = GameState.SETUP_A
     secretA.value = ''
     secretB.value = ''
     history.value = []
     currentPlayer.value = Player.A
     winner.value = null
+  }
+
+  const enterReviewMode = () => {
+    gameState.value = GameState.REVIEW
+  }
+
+  const showPrivacyCurtain = () => {
+    isPrivacyCurtainVisible.value = true
+  }
+
+  const hidePrivacyCurtain = () => {
+    isPrivacyCurtainVisible.value = false
   }
 
   const updateProfile = (player: Player, name: string, avatar: string) => {
@@ -140,6 +148,10 @@ export const useGameStore = defineStore('game', () => {
     resetGame,
     updateProfile,
     setSecret,
-    submitGuess
+    submitGuess,
+    enterReviewMode,
+    isPrivacyCurtainVisible,
+    showPrivacyCurtain,
+    hidePrivacyCurtain
   }
 })

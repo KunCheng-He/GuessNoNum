@@ -6,21 +6,14 @@ import GameBoard from './components/GameBoard.vue'
 import PrivacyCurtain from './components/PrivacyCurtain.vue'
 import { audioController } from './utils/audio'
 import confetti from 'canvas-confetti'
+import { X, RotateCcw, Eye, Volume2, VolumeX } from 'lucide-vue-next'
 
 const gameStore = useGameStore()
 const gameState = computed(() => gameStore.gameState)
 const history = computed(() => gameStore.history)
-const { setSecret, submitGuess, resetGame } = gameStore
+const { setSecret, submitGuess, resetGame, enterReviewMode, hidePrivacyCurtain } = gameStore
 
-const showPrivacyCurtain = ref(true)
-
-// Watch for game finish to play sound and show confetti
-watch(gameState, (newState) => {
-  if (newState === GameState.FINISHED) {
-    audioController.playSuccess()
-    fireConfetti()
-  }
-})
+const soundEnabled = ref(true)
 
 const fireConfetti = () => {
   const duration = 3000
@@ -29,7 +22,7 @@ const fireConfetti = () => {
 
   const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
 
-  const interval: any = setInterval(function() {
+  const interval = setInterval(function() {
     const timeLeft = animationEnd - Date.now()
 
     if (timeLeft <= 0) {
@@ -60,16 +53,36 @@ const privacyMessage = computed(() => {
 const handleSecretSubmit = (secret: string) => {
   if (gameState.value === GameState.SETUP_A) {
     setSecret(Player.A, secret)
-    showPrivacyCurtain.value = true
+    hidePrivacyCurtain()
   } else if (gameState.value === GameState.SETUP_B) {
     setSecret(Player.B, secret)
-    showPrivacyCurtain.value = false
+    hidePrivacyCurtain()
   }
 }
 
-const handleProfileSubmit = () => {
-  // Profile submitted, do nothing here as we wait for secret submission
+const toggleSound = () => {
+  soundEnabled.value = !soundEnabled.value
+  audioController.setMuted(!soundEnabled.value)
 }
+
+const handleDismissPrivacy = () => {
+  audioController.playClick()
+  hidePrivacyCurtain()
+}
+
+const handleStartNewGame = () => {
+  resetGame()
+  hidePrivacyCurtain()
+}
+
+const handleProfileSubmit = () => {}
+
+watch(gameState, (newState) => {
+  if (newState === GameState.FINISHED) {
+    audioController.playSuccess()
+    fireConfetti()
+  }
+})
 
 const handleGuess = (guess: string) => {
   submitGuess(guess)
@@ -83,13 +96,22 @@ const handleGuess = (guess: string) => {
       
       <!-- Privacy Curtain -->
       <PrivacyCurtain
-        v-if="showPrivacyCurtain"
+        v-if="gameStore.isPrivacyCurtainVisible"
         :message="privacyMessage"
-        @dismiss="showPrivacyCurtain = false"
+        @dismiss="handleDismissPrivacy"
       />
 
       <!-- Game Content -->
-      <template v-else>
+      <template v-else-if="gameState !== GameState.FINISHED">
+        <!-- Sound Toggle -->
+        <button
+          @click="toggleSound"
+          class="fixed top-4 right-4 z-50 p-2 text-white/40 hover:text-white transition-colors"
+          :title="soundEnabled ? '关闭音效' : '开启音效'"
+        >
+          <Volume2 v-if="soundEnabled" class="w-6 h-6" />
+          <VolumeX v-else class="w-6 h-6" />
+        </button>
         <!-- Setup Phase -->
         <SecretInput
           v-if="gameState === GameState.SETUP_A"
@@ -109,7 +131,7 @@ const handleGuess = (guess: string) => {
 
         <!-- Battle Phase -->
         <GameBoard
-          v-else
+          v-else-if="gameState === GameState.PLAYING || gameState === GameState.REVIEW"
           class="flex-1 min-h-0 w-full"
           :current-player="gameStore.currentPlayer"
           :history="history"
@@ -119,11 +141,19 @@ const handleGuess = (guess: string) => {
 
       <!-- Winner Modal -->
       <div v-if="gameState === GameState.FINISHED" class="absolute inset-0 z-40 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-500">
-        <div class="bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-8 text-center shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-white/10 ring-1 ring-white/5">
+        <div class="bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl rounded-3xl p-8 text-center shadow-2xl max-w-sm w-full transform transition-all scale-100 border border-white/10 ring-1 ring-white/5 relative">
+          <button
+            @click="() => { audioController.playClick(); enterReviewMode() }"
+            class="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-1"
+            title="Close and review"
+          >
+            <X class="w-6 h-6" />
+          </button>
+          
           <div class="text-7xl mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">🏆</div>
           <h2 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2 text-white">
-            <span>{{ useGameStore().winner === Player.A ? gameStore.playerA.avatar : gameStore.playerB.avatar }}</span>
-            <span class="bg-gradient-to-r from-violet-200 to-pink-200 bg-clip-text text-transparent">{{ useGameStore().winner === Player.A ? gameStore.playerA.name : gameStore.playerB.name }} 获胜!</span>
+            <span>{{ gameStore.winner === Player.A ? gameStore.playerA.avatar : gameStore.playerB.avatar }}</span>
+            <span class="bg-gradient-to-r from-violet-200 to-pink-200 bg-clip-text text-transparent">{{ gameStore.winner === Player.A ? gameStore.playerA.name : gameStore.playerB.name }} 获胜!</span>
           </h2>
           <p class="text-white/50 mb-8 font-medium tracking-wide">恭喜!</p>
           
@@ -148,8 +178,8 @@ const handleGuess = (guess: string) => {
             @click="() => { audioController.playClick(); resetGame(); showPrivacyCurtain = true }"
             class="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:from-violet-500 hover:to-pink-500 active:scale-95 transition-all shadow-lg shadow-pink-900/20 hover:shadow-pink-600/30 tracking-wider"
           >
-            <span class="text-xl mr-2">🔄</span>
-            再来一局
+            <RotateCcw class="w-5 h-5" />
+            <span>再来一局</span>
           </button>
         </div>
       </div>

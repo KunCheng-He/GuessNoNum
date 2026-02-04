@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import SoftKeyboard from './SoftKeyboard.vue'
 import type { GuessRecord, Player } from '../stores/game'
 import { Player as PlayerEnum, useGameStore } from '../stores/game'
-import { Flag, History, X } from 'lucide-vue-next'
+import { Flag, History, X, RotateCcw, Eye } from 'lucide-vue-next'
+import { GameState } from '../stores/game'
 
 
 const props = defineProps<{
@@ -12,7 +13,9 @@ const props = defineProps<{
 }>()
 
 const gameStore = useGameStore()
-const { playerA, playerB } = gameStore
+const { playerA, playerB, hidePrivacyCurtain } = gameStore
+
+const isReviewMode = computed(() => gameStore.gameState === GameState.REVIEW)
 
 const emit = defineEmits<{
   (e: 'guess', val: string): void
@@ -25,7 +28,6 @@ const historyB = computed(() => props.history.filter(r => r.player === PlayerEnu
 const bottomRefA = ref<HTMLElement | null>(null)
 const bottomRefB = ref<HTMLElement | null>(null)
 
-// Auto-scroll logic for history containers
 const scrollToBottom = (element: HTMLElement | null) => {
   if (element) {
     nextTick(() => {
@@ -46,11 +48,15 @@ const showRules = ref(false)
 const showMobileHistory = ref(false)
 const mobileHistoryTab = ref<PlayerEnum>(PlayerEnum.A)
 
+const triggerHaptic = () => {
+  if (navigator.vibrate) {
+    navigator.vibrate(15)
+  }
+}
+
 const toggleRules = () => {
-  // Only toggle on mobile via click. On desktop, hover handles it.
-  // But we can support click toggle for desktop too if desired, 
-  // currently focusing on mobile support.
   if (window.innerWidth < 640) {
+    triggerHaptic()
     showRules.value = !showRules.value
   }
 }
@@ -58,19 +64,50 @@ const toggleRules = () => {
 const handleInput = (val: string) => {
   if (digits.value.length < 4 && !digits.value.includes(val)) {
     digits.value.push(val)
+    triggerHaptic()
   }
 }
 
 const handleDelete = () => {
-  digits.value.pop()
+  if (digits.value.length > 0) {
+    digits.value.pop()
+    triggerHaptic()
+  }
 }
 
 const handleConfirm = () => {
   if (digits.value.length === 4) {
     emit('guess', digits.value.join(''))
     digits.value = []
+    triggerHaptic()
   }
 }
+
+const handleStartNewGame = () => {
+  triggerHaptic()
+  gameStore.resetGame()
+  hidePrivacyCurtain()
+}
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (isReviewMode.value) return
+
+  if (e.key >= '0' && e.key <= '9') {
+    handleInput(e.key)
+  } else if (e.key === 'Backspace') {
+    handleDelete()
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    handleConfirm()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>
@@ -78,22 +115,23 @@ const handleConfirm = () => {
     
     <!-- Mobile History Button -->
     <div class="fixed top-6 right-6 z-30 sm:hidden">
-      <button 
-        @click="showMobileHistory = true"
-        class="w-12 h-12 bg-white/10 backdrop-blur-xl text-white rounded-2xl shadow-lg border border-white/20 flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all"
-      >
-        <History class="w-6 h-6" />
-      </button>
-    </div>
+        <button 
+          @click="() => { showMobileHistory = true; triggerHaptic() }"
+          class="w-12 h-12 bg-white/10 backdrop-blur-xl text-white rounded-2xl shadow-lg border border-white/20 flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all"
+        >
+          <History class="w-6 h-6" />
+        </button>
+      </div>
 
-    <!-- Rules Float Button -->
-    <div 
-      class="fixed bottom-6 right-6 z-30 group"
-      @mouseenter="showRules = true"
-      @mouseleave="showRules = false"
-      @click="toggleRules"
-    >
-      <button class="w-14 h-14 bg-white/20 backdrop-blur-xl text-white rounded-full shadow-lg border border-white/30 flex items-center justify-center text-xl hover:bg-white/30 transition-all hover:scale-110 hover:shadow-xl">
+      <!-- Rules Float Button -->
+      <div
+        class="fixed bottom-6 right-6 z-30 group"
+        @mouseenter="showRules = true"
+        @mouseleave="showRules = false"
+        @click.prevent="toggleRules"
+        @touchend.prevent="toggleRules"
+      >
+        <button class="w-14 h-14 bg-white/20 backdrop-blur-xl text-white rounded-full shadow-lg border border-white/30 flex items-center justify-center text-xl hover:bg-white/30 transition-all hover:scale-110 hover:shadow-xl active:scale-95">
         <span class="font-bold text-lg">?</span>
       </button>
       
@@ -219,18 +257,19 @@ const handleConfirm = () => {
     <!-- Main Layout Grid -->
     <div class="flex-1 grid grid-cols-1 sm:grid-cols-[320px_1fr_320px] h-full overflow-hidden min-h-0">
       
-      <!-- Left Panel: Player A History -->
-      <div class="flex flex-col h-full overflow-hidden border-r border-white/10 bg-white/5 order-2 sm:order-1 relative sm:flex hidden min-h-0">
-        <div class="p-4 bg-gradient-to-r from-blue-500/20 to-transparent shadow-sm z-10 flex items-center justify-center gap-3 border-b border-white/10 relative shrink-0">
-          <div v-if="currentPlayer === PlayerEnum.A" class="absolute left-4 top-1/2 -translate-y-1/2 animate-bounce">
-            <Flag class="w-6 h-6 text-blue-400 fill-current drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
+        <!-- Left Panel: Player A History -->
+        <div class="flex flex-col h-full overflow-hidden border-r border-white/10 bg-white/5 order-2 sm:order-1 relative sm:flex hidden min-h-0">
+          <div class="p-4 bg-gradient-to-r from-blue-500/20 to-transparent shadow-sm z-10 flex items-center justify-center gap-3 border-b border-white/10 relative shrink-0">
+            <div v-if="currentPlayer === PlayerEnum.A" class="absolute left-4 top-1/2 -translate-y-1/2 animate-bounce">
+              <Flag class="w-6 h-6 text-blue-400 fill-current drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
+            </div>
+            <span class="text-3xl drop-shadow-md">{{ playerA.avatar }}</span>
+            <div class="flex flex-col items-center">
+              <span class="font-bold text-white tracking-wide">{{ playerA.name }}</span>
+              <span v-if="isReviewMode" class="text-xs text-green-400 font-mono">{{ gameStore.secretB }}</span>
+              <span class="text-xs text-blue-300/80 font-medium uppercase tracking-wider">猜测记录</span>
+            </div>
           </div>
-          <span class="text-3xl drop-shadow-md">{{ playerA.avatar }}</span>
-          <div class="flex flex-col items-center">
-            <span class="font-bold text-white tracking-wide">{{ playerA.name }}</span>
-            <span class="text-xs text-blue-300/80 font-medium uppercase tracking-wider">猜测记录</span>
-          </div>
-        </div>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
           <div v-if="historyA.length === 0" class="flex flex-col items-center justify-center h-full text-white/30">
@@ -253,23 +292,42 @@ const handleConfirm = () => {
         </div>
       </div>
 
-      <!-- Center Panel: Operation Area -->
-      <div class="flex flex-col z-20 shadow-xl sm:shadow-none bg-transparent order-1 sm:order-2 h-full overflow-hidden min-h-0">
-        <div class="flex-1 flex flex-col justify-center p-4 overflow-y-auto min-h-0">
-          <div class="mb-8 text-center shrink-0">
-            <div class="text-sm text-white/50 mb-3 uppercase tracking-widest font-medium">当前回合</div>
-            <div class="inline-flex items-center gap-4 px-8 py-5 bg-white/10 backdrop-blur-md rounded-[2rem] shadow-2xl border border-white/20 transition-all duration-500"
-              :class="currentPlayer === PlayerEnum.A ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-400/30' : 'shadow-[0_0_30px_rgba(236,72,153,0.3)] border-pink-400/30'"
-            >
-              <span class="text-5xl animate-bounce drop-shadow-md">{{ currentPlayer === PlayerEnum.A ? playerA.avatar : playerB.avatar }}</span>
-              <div class="flex flex-col items-start">
-                <span class="text-xs text-white/50 uppercase tracking-wider font-bold mb-0.5">Player</span>
-                <span class="font-bold text-3xl text-white tracking-wide" :class="currentPlayer === PlayerEnum.A ? 'text-blue-100' : 'text-pink-100'">
-                  {{ currentPlayer === PlayerEnum.A ? playerA.name : playerB.name }}
-                </span>
+        <!-- Center Panel: Operation Area -->
+        <div class="flex flex-col z-20 shadow-xl sm:shadow-none bg-transparent order-1 sm:order-2 h-full overflow-hidden min-h-0">
+          <div class="flex-1 flex flex-col justify-center p-4 overflow-y-auto min-h-0">
+            <!-- Review Mode Banner -->
+            <div v-if="isReviewMode" class="mb-6 text-center shrink-0">
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-medium">
+                <Eye class="w-4 h-4" />
+                <span>复盘模式 - 查看游戏记录</span>
               </div>
             </div>
-          </div>
+            
+            <div class="mb-8 text-center shrink-0">
+              <div class="text-sm text-white/50 mb-3 uppercase tracking-widest font-medium">{{ isReviewMode ? '获胜者' : '当前回合' }}</div>
+              <div class="inline-flex items-center gap-4 px-8 py-5 bg-white/10 backdrop-blur-md rounded-[2rem] shadow-2xl border border-white/20 transition-all duration-500"
+                :class="currentPlayer === PlayerEnum.A ? 'shadow-[0_0_30px_rgba(59,130,246,0.3)] border-blue-400/30' : 'shadow-[0_0_30px_rgba(236,72,153,0.3)] border-pink-400/30'"
+              >
+                <span class="text-5xl animate-bounce drop-shadow-md">{{ currentPlayer === PlayerEnum.A ? playerA.avatar : playerB.avatar }}</span>
+                <div class="flex flex-col items-start">
+                  <span class="text-xs text-white/50 uppercase tracking-wider font-bold mb-0.5">Player</span>
+                  <span class="font-bold text-3xl text-white tracking-wide" :class="currentPlayer === PlayerEnum.A ? 'text-blue-100' : 'text-pink-100'">
+                    {{ currentPlayer === PlayerEnum.A ? playerA.name : playerB.name }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Mode: Start New Game Button -->
+            <div v-if="isReviewMode" class="max-w-xs mx-auto w-full shrink-0 mb-8">
+              <button
+                @click="handleStartNewGame"
+                class="w-full py-4 bg-gradient-to-r from-violet-600 to-pink-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:from-violet-500 hover:to-pink-500 active:scale-95 transition-all shadow-lg shadow-pink-900/20 hover:shadow-pink-600/30 tracking-wider"
+              >
+                <RotateCcw class="w-5 h-5" />
+                <span>开始新游戏</span>
+              </button>
+            </div>
 
           <!-- Input Display -->
           <div class="flex justify-center gap-3 mb-8 shrink-0">
@@ -284,7 +342,7 @@ const handleConfirm = () => {
           </div>
 
           <!-- Keyboard -->
-          <div class="max-w-xs mx-auto w-full shrink-0">
+          <div v-if="!isReviewMode" class="max-w-xs mx-auto w-full shrink-0">
             <SoftKeyboard
               :max-length-reached="digits.length >= 4"
               @input="handleInput"
@@ -295,18 +353,19 @@ const handleConfirm = () => {
         </div>
       </div>
 
-      <!-- Right Panel: Player B History -->
-      <div class="flex flex-col h-full overflow-hidden bg-white/5 order-3 relative sm:flex hidden border-l border-white/10 min-h-0">
-        <div class="p-4 bg-gradient-to-l from-pink-500/20 to-transparent shadow-sm z-10 flex items-center justify-center gap-3 border-b border-white/10 relative shrink-0">
-          <div v-if="currentPlayer === PlayerEnum.B" class="absolute left-4 top-1/2 -translate-y-1/2 animate-bounce">
-            <Flag class="w-6 h-6 text-pink-400 fill-current drop-shadow-[0_0_8px_rgba(244,114,182,0.6)]" />
+        <!-- Right Panel: Player B History -->
+        <div class="flex flex-col h-full overflow-hidden bg-white/5 order-3 relative sm:flex hidden border-l border-white/10 min-h-0">
+          <div class="p-4 bg-gradient-to-l from-pink-500/20 to-transparent shadow-sm z-10 flex items-center justify-center gap-3 border-b border-white/10 relative shrink-0">
+            <div v-if="currentPlayer === PlayerEnum.B" class="absolute left-4 top-1/2 -translate-y-1/2 animate-bounce">
+              <Flag class="w-6 h-6 text-pink-400 fill-current drop-shadow-[0_0_8px_rgba(244,114,182,0.6)]" />
+            </div>
+            <span class="text-3xl drop-shadow-md">{{ playerB.avatar }}</span>
+            <div class="flex flex-col items-center">
+              <span class="font-bold text-white tracking-wide">{{ playerB.name }}</span>
+              <span v-if="isReviewMode" class="text-xs text-green-400 font-mono">{{ gameStore.secretA }}</span>
+              <span class="text-xs text-pink-300/80 font-medium uppercase tracking-wider">猜测记录</span>
+            </div>
           </div>
-          <span class="text-3xl drop-shadow-md">{{ playerB.avatar }}</span>
-          <div class="flex flex-col items-center">
-            <span class="font-bold text-white tracking-wide">{{ playerB.name }}</span>
-            <span class="text-xs text-pink-300/80 font-medium uppercase tracking-wider">猜测记录</span>
-          </div>
-        </div>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth min-h-0 pb-20">
           <div v-if="historyB.length === 0" class="flex flex-col items-center justify-center h-full text-white/30">

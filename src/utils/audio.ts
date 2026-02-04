@@ -2,6 +2,7 @@
 class AudioController {
   private ctx: AudioContext | null = null;
   private enabled: boolean = true;
+  private muted: boolean = false;
 
   constructor() {
     try {
@@ -13,6 +14,10 @@ class AudioController {
     }
   }
 
+  setMuted(value: boolean) {
+    this.muted = value;
+  }
+
   private ensureContext() {
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume();
@@ -20,7 +25,7 @@ class AudioController {
   }
 
   playTone(freq: number, type: OscillatorType, duration: number, startTime: number = 0) {
-    if (!this.enabled || !this.ctx) return;
+    if (!this.enabled || this.muted || !this.ctx) return;
     this.ensureContext();
 
     const osc = this.ctx.createOscillator();
