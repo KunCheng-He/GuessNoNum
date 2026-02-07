@@ -145,12 +145,12 @@ const handleGuess = (guess: string) => {
             <X class="w-6 h-6" />
           </button>
           
-          <div class="text-7xl mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">🏆</div>
+          <div class="text-7xl mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{{ gameStore.isSurrender ? '🏳️' : '🏆' }}</div>
           <h2 class="text-3xl font-bold mb-2 flex items-center justify-center gap-2 text-white">
             <span>{{ gameStore.winner === Player.A ? gameStore.playerA.avatar : gameStore.playerB.avatar }}</span>
             <span class="bg-gradient-to-r from-violet-200 to-pink-200 bg-clip-text text-transparent">{{ gameStore.winner === Player.A ? gameStore.playerA.name : gameStore.playerB.name }} 获胜!</span>
           </h2>
-          <p class="text-white/50 mb-8 font-medium tracking-wide">恭喜!</p>
+          <p class="text-white/50 mb-8 font-medium tracking-wide">{{ gameStore.isSurrender ? '对方已投降' : '恭喜!' }}</p>
           
           <div class="grid grid-cols-2 gap-4 mb-8 text-left bg-black/20 p-4 rounded-2xl border border-white/5">
             <div>

@@ -17,6 +17,14 @@ const { playerA, playerB, hidePrivacyCurtain } = gameStore
 
 const isReviewMode = computed(() => gameStore.gameState === GameState.REVIEW)
 
+const showSurrenderConfirm = ref(false)
+
+const handleSurrender = () => {
+  triggerHaptic()
+  gameStore.surrender()
+  showSurrenderConfirm.value = false
+}
+
 const emit = defineEmits<{
   (e: 'guess', val: string): void
 }>()
@@ -48,6 +56,13 @@ const showRules = ref(false)
 const showMobileHistory = ref(false)
 const mobileHistoryTab = ref<PlayerEnum>(PlayerEnum.A)
 
+// 检测是否为触屏设备
+const isTouchDevice = ref(false)
+
+onMounted(() => {
+  isTouchDevice.value = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
+})
+
 const triggerHaptic = () => {
   if (navigator.vibrate) {
     navigator.vibrate(15)
@@ -55,9 +70,19 @@ const triggerHaptic = () => {
 }
 
 const toggleRules = () => {
-  if (window.innerWidth < 640) {
-    triggerHaptic()
-    showRules.value = !showRules.value
+  triggerHaptic()
+  showRules.value = !showRules.value
+}
+
+const handleRulesMouseEnter = () => {
+  if (!isTouchDevice.value) {
+    showRules.value = true
+  }
+}
+
+const handleRulesMouseLeave = () => {
+  if (!isTouchDevice.value) {
+    showRules.value = false
   }
 }
 
@@ -126,10 +151,9 @@ onUnmounted(() => {
       <!-- Rules Float Button -->
       <div
         class="fixed bottom-6 right-6 z-30 group"
-        @mouseenter="showRules = true"
-        @mouseleave="showRules = false"
+        @mouseenter="handleRulesMouseEnter"
+        @mouseleave="handleRulesMouseLeave"
         @click.prevent="toggleRules"
-        @touchend.prevent="toggleRules"
       >
         <button class="w-14 h-14 bg-white/20 backdrop-blur-xl text-white rounded-full shadow-lg border border-white/30 flex items-center justify-center text-xl hover:bg-white/30 transition-all hover:scale-110 hover:shadow-xl active:scale-95">
         <span class="font-bold text-lg">?</span>
@@ -349,6 +373,14 @@ onUnmounted(() => {
               @delete="handleDelete"
               @confirm="handleConfirm"
             />
+            <!-- Surrender Button -->
+            <button
+              @click="() => { triggerHaptic(); showSurrenderConfirm = true; }"
+              class="mt-4 w-full py-3 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-xl flex items-center justify-center gap-2 transition-all border border-white/10 hover:border-white/20"
+            >
+              <Flag class="w-4 h-4" />
+              <span class="text-sm font-medium">投降</span>
+            </button>
           </div>
         </div>
       </div>
@@ -385,6 +417,43 @@ onUnmounted(() => {
             </span>
           </div>
           <div ref="bottomRefB"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Surrender Confirm Modal -->
+    <div 
+      v-if="showSurrenderConfirm"
+      class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      @click="showSurrenderConfirm = false"
+    >
+      <div 
+        class="bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 max-w-sm w-full border border-white/20 shadow-2xl animate-in zoom-in-95"
+        @click.stop
+      >
+        <div class="text-center mb-6">
+          <div class="text-5xl mb-4">🏳️</div>
+          <h3 class="text-xl font-bold text-white mb-2">确定要投降吗？</h3>
+          <p class="text-white/60 text-sm">
+            <span class="font-medium" :class="currentPlayer === PlayerEnum.A ? 'text-blue-400' : 'text-pink-400'">
+              {{ currentPlayer === PlayerEnum.A ? playerA.name : playerB.name }}
+            </span>
+            将认输，游戏结束
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            @click="showSurrenderConfirm = false"
+            class="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white/80 rounded-xl font-medium transition-all border border-white/10"
+          >
+            取消
+          </button>
+          <button
+            @click="handleSurrender"
+            class="flex-1 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-medium transition-all border border-red-500/30"
+          >
+            确认投降
+          </button>
         </div>
       </div>
     </div>

@@ -33,7 +33,7 @@ export interface GuessRecord {
 
 export const useGameStore = defineStore('game', () => {
   const gameState = ref<GameState>(GameState.SETUP_A)
-  
+
   // Player Profiles
   const playerA = ref<PlayerProfile>({ name: '玩家 A', avatar: '🦁' })
   const playerB = ref<PlayerProfile>({ name: '玩家 B', avatar: '🐯' })
@@ -44,6 +44,7 @@ export const useGameStore = defineStore('game', () => {
   const currentPlayer = ref<Player>(Player.A)
   const winner = ref<Player | null>(null)
   const isPrivacyCurtainVisible = ref(true)
+  const isSurrender = ref<boolean>(false)
 
   const resetGame = () => {
     gameState.value = GameState.SETUP_A
@@ -52,6 +53,16 @@ export const useGameStore = defineStore('game', () => {
     history.value = []
     currentPlayer.value = Player.A
     winner.value = null
+    isSurrender.value = false
+  }
+
+  const surrender = () => {
+    if (gameState.value !== GameState.PLAYING) return
+    const loser = currentPlayer.value
+    const victor = loser === Player.A ? Player.B : Player.A
+    gameState.value = GameState.FINISHED
+    winner.value = victor
+    isSurrender.value = true
   }
 
   const enterReviewMode = () => {
@@ -145,11 +156,13 @@ export const useGameStore = defineStore('game', () => {
     history,
     currentPlayer,
     winner,
+    isSurrender,
     resetGame,
     updateProfile,
     setSecret,
     submitGuess,
     enterReviewMode,
+    surrender,
     isPrivacyCurtainVisible,
     showPrivacyCurtain,
     hidePrivacyCurtain
